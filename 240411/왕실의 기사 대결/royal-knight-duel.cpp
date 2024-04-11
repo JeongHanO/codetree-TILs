@@ -146,7 +146,7 @@ void check_order(int ord_num){
         int w = knights[kni_num].w;
 
         // cout << "K.N: " << kni_num << " | "<< nr << ' ' << nc << ' ' << h << ' ' << w  << endl;
-        if(nr < 1 || nc < 1 || nr+h > l || nc+w> l) {
+        if(nr < 1 || nc < 1 || nr+h-1 > l || nc+w-1 > l) {
             return;
         } // 범위 벗어남
 
