@@ -1,198 +1,113 @@
 #include <iostream>
-#include <vector>
-#include <stack>
+#include <queue>
+
 using namespace std;
 
-struct Knight { // x, y, 높이, 너비, 생명, 받은 데미지
-    int r;
-    int c;
-    int h;
-    int w;
-    int k;
-    int d;
-};
-
-int dx[] = { -1, 0, 1, 0 };
-int dy[] = { 0, 1, 0, -1 };
+#define MAX_N 31
+#define MAX_L 41
 
 int l, n, q;
-int ans = 0;
-pair<int, int> board[41][41]; // first: 맵 정보, second: 기사 번호
-Knight knights[31];
-pair<int, int> orders[101];
+int info[MAX_L][MAX_L];
+int bef_k[MAX_N];
+int r[MAX_N], c[MAX_N], h[MAX_N], w[MAX_N], k[MAX_N];
+int nr[MAX_N], nc[MAX_N];
+int dmg[MAX_N];
+bool is_moved[MAX_N];
 
-void print_knight() {
-    for (int i = 1; i <= l; i++) {
-        for (int j = 1; j <= l; j++) {
-            cout << board[i][j].second << ' ';
-        }
-        cout << endl;
-    }
-    cout << "===================\n\n";
-}
+int dx[4] = {-1, 0, 1, 0}, dy[4] = {0, 1, 0, -1};
 
-void input() {
-    cin >> l >> n >> q;
-    // 맵 정보
-    for (int i = 1; i <= l; i++) {
-        for (int j = 1; j <= l; j++) {
-            int a; cin >> a;
-            board[i][j].first = a;
-        }
-    }
-    // 기사 정보
-    for (int i = 1; i <= n; i++) {
-        int r, c, h, w, k;
-        cin >> r >> c >> h >> w >> k;
-        knights[i] = { r, c, h, w, k };
-        for (int x = r; x < r + h; x++) {
-            for (int y = c; y < c + w; y++) {
-                board[x][y].second = i;
-            }
-        }
-    }
-    // 명령 정보
-    for (int i = 0; i < q; i++) {
-        int a, b; cin >> a >> b;
-        orders[i] = { a, b };
-    }
-}
-
-// 입력받은 기사를 이동
-// 기존에 있던 자리 비우기, 새로운 자리에 입력, 구조체 갱신
-void movement(int kni_num, int dir) {
-    int r = knights[kni_num].r;
-    int c = knights[kni_num].c;
-    int h = knights[kni_num].h;
-    int w = knights[kni_num].w;
-    int nr = r + dx[dir];
-    int nc = c + dy[dir];
-
-    // board 갱신
-    for (int i = r; i < r + h; i++) {
-        for (int j = c; j < c + w; j++) {
-            board[i][j].second = 0;
-        }
+// 움직임을 시도해봅니다.
+bool TryMovement(int idx, int dir) {
+    // 초기화 작업입니다.
+    for(int i = 1; i <= n; i++) {
+        dmg[i] = 0;
+        is_moved[i] = false;
+        nr[i] = r[i];
+        nc[i] = c[i];
     }
 
-    // 기사 정보 갱신
-    knights[kni_num].r = nr;
-    knights[kni_num].c = nc;
+    queue<int> q;
 
-    for (int i = nr; i < nr + h; i++) {
-        for (int j = nc; j < nc + w; j++) {
-            board[i][j].second = kni_num;
-        }
-    }
-}
+    q.push(idx);
+    is_moved[idx] = true;
 
-// 기사의 번호를 받아서 범위 내 함정의 개수만큼 체력 감소
-void damage(int kni_num) {
-    // 1~n사이의 범위 잘 확인 할 것. 함정은 1임.
-    int r = knights[kni_num].r;
-    int c = knights[kni_num].c;
-    int h = knights[kni_num].h;
-    int w = knights[kni_num].w;
-    int k = knights[kni_num].k;
+    while(!q.empty()) {
+        int x = q.front(); q.pop();
 
-    // 범위 내 함정 갯수 카운트
-    int cnt_dmg = 0;
-    for (int i = r; i <= l && i < r + h; i++) {
-        for (int j = c; j <= l && j < c + w; j++) {
-            if (board[i][j].first == 1) cnt_dmg++;
-        }
-    }
+        nr[x] += dx[dir];
+        nc[x] += dy[dir];
 
-    // 데미지 계산, 기사 생존 여부 확인. 사망시 board에서 정보 삭제.
-    k -= cnt_dmg;
-    if (k <= 0) { // 사망
-        knights[kni_num].k = 0;
-        for (int i = r; i < r + h; i++) {
-            for (int j = c; j < c + w; j++) {
-                board[i][j].second = 0;
+        // 경계를 벗어나는지 체크합니다.
+        if(nr[x] < 1 || nc[x] < 1 || nr[x] + h[x] - 1 > l || nc[x] + w[x] - 1 > l)
+            return false;
+
+        // 대상 조각이 다른 조각이나 장애물과 충돌하는지 검사합니다.
+        for(int i = nr[x]; i <= nr[x] + h[x] - 1; i++) {
+            for(int j = nc[x]; j <= nc[x] + w[x] - 1; j++) {
+                if(info[i][j] == 1) 
+                    dmg[x]++;
+                if(info[i][j] == 2)
+                    return false;
             }
         }
 
-    }
-    else { // 생존
-        knights[kni_num].k = k; // 생명력 갱신
-        knights[kni_num].d += cnt_dmg; // 누적 데미지 갱신
-    }
-}
+        // 다른 조각과 충돌하는 경우, 해당 조각도 같이 이동합니다.
+        for(int i = 1; i <= n; i++) {
+            if(is_moved[i] || k[i] <= 0) 
+                continue;
+            if(r[i] > nr[x] + h[x] - 1 || nr[x] > r[i] + h[i] - 1) 
+                continue;
+            if(c[i] > nc[x] + w[x] - 1 || nc[x] > c[i] + w[i] - 1) 
+                continue;
 
-// 명령 수행이 가능한지 판단하는 함수
-// 연쇄적으로 움직일 기사들을 stack에 넣고, 움직임의 끝이 벽인지 아닌지 확인.
-void check_order(int ord_num) {
-    stack<int> stk;
-
-    // 기사 번호, 이동 방향, 기사 좌표
-    int ord_kni_num = orders[ord_num].first;
-    int dir = orders[ord_num].second;
-
-    stk.push(ord_kni_num);
-    bool stacked[31] = { false };
-    stacked[ord_kni_num] = true;
-
-    // 스택의 top에 있는 기사의 범위를 보고 판단.
-    // 벽이 있거나 범위를 벗어나면 -> return
-    // 범위에 다른 기사가 있다면 -> 스택에 추가 + continue
-    // 범위에 다른 기사의 "범위"가 포함되는지 봐야함. board에서 범위를 늘려야할듯.
-    // 범위를 늘리면 스택에 쌓이는 수가 많아질텐데. 이걸 방지할 방법이 필요할듯.
-    // 기사도 벽도 없으면 -> damage + stk.pop()
-    while (!stk.empty()) {
-        int kni_num = stk.top();
-        int nr = knights[kni_num].r + dx[dir];
-        int nc = knights[kni_num].c + dy[dir];
-        int h = knights[kni_num].h;
-        int w = knights[kni_num].w;
-        
-        
-        if (nr < 1 || nc < 1 || nr + h - 1 > l || nc + w - 1> l) {
-            return;
-        } // 범위 벗어남
-
-        bool found_knight = false; // 범위 내 기사 존재 여부
-
-        for (int i = nr; i < nr + h; i++) {
-            for (int j = nc; j < nc + w; j++) {
-                if (board[i][j].first == 2) return; //벽에 막힘
-                if (board[i][j].second > 0 && !stacked[board[i][j].second]) { // 범위 안에 기사 있음
-                    stk.push(board[i][j].second);
-                    stacked[board[i][j].second] = true;
-                    found_knight = true;
-                }
-            }
+            is_moved[i] = true;
+            q.push(i);
         }
-
-        if (found_knight) continue; // 기사 찾았으면 연쇄작용 받을 기사 먼저 탐색 + 동작
-
-        // 범위 안에 기사 없으면 자리 이동 + 데미지 수행
-        stk.pop();
-        movement(kni_num, dir);
-        if (kni_num != ord_kni_num) damage(kni_num); // 민 기사는 데미지 받으면 안됨
     }
 
+    dmg[idx] = 0;
+    return true;
 }
 
-void sum_damege() {
-    for (int i = 1; i <= n; i++) {
-        if (knights[i].k > 0) ans += knights[i].d;
-    }
-    cout << ans << endl;
-}
+// 특정 조각을 지정된 방향으로 이동시키는 함수입니다.
+void MovePiece(int idx, int dir) {
+    if(k[idx] <= 0) 
+        return;
 
-void solve() {
-    input();
-    for (int i = 0; i < q; i++) {
-        if (knights[orders[i].first].k == 0) continue; // 수행할 기사 없음
-        //cout << "ORDER NUM: " << i << endl;
-        check_order(i);
-        //print_knight();
+    // 이동이 가능한 경우, 실제 위치와 체력을 업데이트합니다.
+    if(TryMovement(idx, dir)) {
+        for(int i = 1; i <= n; i++) {
+            r[i] = nr[i];
+            c[i] = nc[i];
+            k[i] -= dmg[i];
+        }
     }
-    sum_damege();
 }
 
 int main() {
-    solve();
+    // 입력값을 받습니다.
+    cin >> l >> n >> q;
+    for(int i = 1; i <= l; i++)
+        for(int j = 1; j <= l; j++)
+            cin >> info[i][j];
+    for(int i = 1; i <= n; i++) {
+        cin >> r[i] >> c[i] >> h[i] >> w[i] >> k[i];
+        bef_k[i] = k[i];
+    }
+    for(int i = 1; i <= q; i++) {
+        int idx, dir;
+        cin >> idx >> dir;
+        MovePiece(idx, dir);
+    }
+
+    // 결과를 계산하고 출력합니다.
+    long long ans = 0;
+    for(int i = 1; i <= n; i++) {
+        if(k[i] > 0) {
+            ans += bef_k[i] - k[i];
+        }
+    }
+
+    cout << ans;
     return 0;
 }
