@@ -21,6 +21,8 @@ pair<int, int> board[41][41]; // first: 맵 정보, second: 기사 번호
 Knight knights[31];
 pair<int, int> orders[101];
 
+bool test; //@@@@
+
 void print_knight(){
     for(int i = 1; i <= l; i++){
         for(int j = 1; j <= l; j++){
@@ -79,8 +81,8 @@ void movement(int kni_num, int dir){
     knights[kni_num].r = nr;
     knights[kni_num].c = nc;
 
-    for(int i = r; i < r + h; i++){
-        for(int j = c; j < c + w; j++){
+    for(int i = nr; i < nr + h; i++){
+        for(int j = nc; j < nc + w; j++){
             board[i][j].second = kni_num;
         }
     }
@@ -147,7 +149,6 @@ void check_order(int ord_num){
 
         // cout << "K.N: " << kni_num << " | "<< nr << ' ' << nc << ' ' << h << ' ' << w  << endl;
         if(nr < 1 || nc < 1 || nr+h-1 > l || nc+w-1> l) {
-            // cout << "OUT NUM: " << kni_num << endl; 
             return;
         } // 범위 벗어남
 
@@ -184,9 +185,7 @@ void sum_damege(){
 void solve(){
     input();
     for(int i = 0; i < q; i++){
-        // cout << "ORDER NUM: " << i << endl;
         if(knights[orders[i].first].k == 0) continue; // 수행할 기사 없음
-        // print_knight();
         check_order(i);
     }
     sum_damege();
