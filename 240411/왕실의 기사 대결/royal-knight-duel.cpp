@@ -28,6 +28,7 @@ void print_knight(){
         }
         cout << endl;
     }
+    cout << "===================\n\n";
 }
 
 void input(){
@@ -95,7 +96,12 @@ void damage(int kni_num){
     k -= cnt_dmg;
     if(k <= 0){ // 사망
         knights[kni_num].k = 0;
-        board[r][c].second = 0;
+        for(int i = r; i < r + h; i++){
+            for(int j = c; j < c + w; j++){
+                board[i][j].second = 0;
+            }
+        }
+
     } else{ // 생존
         knights[kni_num].k = k; // 생명력 갱신
         knights[kni_num].d += cnt_dmg; // 누적 데미지 갱신
@@ -127,9 +133,7 @@ void check_order(int ord_num){
         int h = knights[kni_num].h;
         int w = knights[kni_num].w;
 
-        //cout << "num: " << kni_num << " / nr,nc: " << nr << " , " << nc << " / h, w: " << h << ", " << w << endl;
-
-        if(nr < 1 || nc < 1 || nr > l || nc > l) return; // 범위 벗어남
+        if(nr < 1 || nc < 1 || nr+h > l || nc+w > l) return; // 범위 벗어남
 
         bool found_knight = false; // 범위 내 기사 존재 여부
         
@@ -149,7 +153,7 @@ void check_order(int ord_num){
         // 범위 안에 기사 없으면 자리 이동 + 데미지 수행
         stk.pop();
         movement(kni_num, dir);
-        damage(kni_num);
+        if(kni_num != ord_kni_num) damage(kni_num); // 민 기사는 데미지 받으면 안됨
     }
 
 }
@@ -164,7 +168,9 @@ void sum_damege(){
 void solve(){
     input();
     for(int i = 0; i < q; i++){
+        // cout << "ORFER NUM: " << i << endl;
         if(knights[orders[i].first].k == 0) continue; // 수행할 기사 없음
+        // print_knight();
         check_order(i);
     }
     sum_damege();
