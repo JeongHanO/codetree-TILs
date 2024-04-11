@@ -117,7 +117,6 @@ void damage(int kni_num) {
     else { // 생존
         knights[kni_num].k = k; // 생명력 갱신
         knights[kni_num].d += cnt_dmg; // 누적 데미지 갱신
-        // cout << "num: " << kni_num << " / dmg : " << cnt_dmg << endl;
     }
 }
 
