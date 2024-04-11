@@ -63,16 +63,27 @@ void input(){
 void movement(int kni_num, int dir){
     int r = knights[kni_num].r;
     int c = knights[kni_num].c;
+    int h = knights[kni_num].h;
+    int w = knights[kni_num].w;
     int nr = r + dx[dir]; 
     int nc = c + dy[dir];
 
     // board 갱신
-    board[r][c].second = 0;
-    board[nr][nc].second = kni_num;
+    for(int i = r; i < r + h; i++){
+        for(int j = c; j < c + w; j++){
+            board[i][j].second = 0;
+        }
+    }
 
     // 기사 정보 갱신
     knights[kni_num].r = nr;
     knights[kni_num].c = nc;
+
+    for(int i = r; i < r + h; i++){
+        for(int j = c; j < c + w; j++){
+            board[i][j].second = kni_num;
+        }
+    }
 }
 
 // 기사의 번호를 받아서 범위 내 함정의 개수만큼 체력 감소
@@ -86,8 +97,8 @@ void damage(int kni_num){
 
     // 범위 내 함정 갯수 카운트
     int cnt_dmg = 0;
-    for(int i = r; i <= l; i++){
-        for(int j = c; j <= l; j++){
+    for(int i = r; i <= l &&  i < r+h; i++){
+        for(int j = c; j <= l &&  j < c+w; j++){
             if(board[i][j].first == 1) cnt_dmg++;
         }
     }
@@ -105,6 +116,7 @@ void damage(int kni_num){
     } else{ // 생존
         knights[kni_num].k = k; // 생명력 갱신
         knights[kni_num].d += cnt_dmg; // 누적 데미지 갱신
+        // cout << "num: " << kni_num << " / dmg : " << cnt_dmg << endl;
     }
 }
 
@@ -133,7 +145,11 @@ void check_order(int ord_num){
         int h = knights[kni_num].h;
         int w = knights[kni_num].w;
 
-        if(nr < 1 || nc < 1 || nr+h > l || nc+w > l) return; // 범위 벗어남
+        // cout << "K.N: " << kni_num << " | "<< nr << ' ' << nc << ' ' << h << ' ' << w  << endl;
+        if(nr < 1 || nc < 1 || nr+h-1 > l || nc+w-1> l) {
+            // cout << "OUT NUM: " << kni_num << endl; 
+            return;
+        } // 범위 벗어남
 
         bool found_knight = false; // 범위 내 기사 존재 여부
         
@@ -168,7 +184,7 @@ void sum_damege(){
 void solve(){
     input();
     for(int i = 0; i < q; i++){
-        // cout << "ORFER NUM: " << i << endl;
+        // cout << "ORDER NUM: " << i << endl;
         if(knights[orders[i].first].k == 0) continue; // 수행할 기사 없음
         // print_knight();
         check_order(i);
