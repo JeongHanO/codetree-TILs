@@ -81,7 +81,7 @@ void r_move(int k){
             InterAction(nx+c*x, ny+c*y, x, y, board[nx][ny]);
         }
     }
-    board[nx][ny] = 9; // 루돌프
+    board[nx][ny] = -1; // 루돌프
     board[r_pos.first][r_pos.second] = 0;
     r_pos.first = nx;
     r_pos.second = ny;
@@ -104,7 +104,7 @@ void s_move(int k){
             ny = sc[i] + dy[j];
             tmp_dist = (r_pos.first - nx)*(r_pos.first - nx) + (r_pos.second - ny)*(r_pos.second - ny);
             if(tmp_dist < dist){ // 거리가 감소했을 때. 빈칸 or 루돌프 일 때만 작용. '가장 가까운'거리 탐색.
-                if (board[nx][ny] ==9){ // 루돌프이면 바로 충돌
+                if (board[nx][ny] == -1){ // 루돌프이면 바로 충돌
                     score[i] += d;
                     stuned[i] = k+1;
                     board[sr[i]][sc[i]] = 0;
@@ -118,7 +118,7 @@ void s_move(int k){
                 }
             }
         }
-
+        
         if(next_x != 0 || next_y != 0){ // 이동 가능한 가까워지는 칸 존재
             board[sr[i]][sc[i]] = 0;
             sr[i] = next_x;
@@ -151,7 +151,7 @@ int main() {
     int x, y;
     cin >> x >> y;
     r_pos = {x, y};
-    board[x][y] = 9; // 루돌프
+    board[x][y] = -1; // 루돌프
 
     for(int i = 1; i <= p; i++){
         int s_num;
