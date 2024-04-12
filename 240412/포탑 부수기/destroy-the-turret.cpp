@@ -10,80 +10,93 @@ bool attacked[11][11];
 pair<int, int> weak_pos;
 pair<int, int> strong_pos;
 
-int dx[] = {0, 1, 0, -1};
-int dy[] = {1, 0, -1, 0};
-int b_dx[] = {1, 1, 1, 0, -1, -1, -1, 0};
-int b_dy[] = {-1, 0, 1, 1, 1, 0, -1, -1};
+int dx[] = { 0, 1, 0, -1 };
+int dy[] = { 1, 0, -1, 0 };
+int b_dx[] = { 1, 1, 1, 0, -1, -1, -1, 0 };
+int b_dy[] = { -1, 0, 1, 1, 1, 0, -1, -1 };
 
-void input(){
+void input() {
     cin >> n >> m >> k;
-    for(int i = 1; i <= n; i++){
-        for(int j = 1; j <= m; j++){
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= m; j++) {
             cin >> board[i][j].first;
             board[i][j].second = 0;
         }
     }
 }
 
-void print_board(){
+void print_board() {
     cout << "==공격력==" << endl;
-    for(int i = 1; i <= n; i++){
-        for(int j = 1; j <= n; j++){
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
             cout << board[i][j].first << ' ';
         }
         cout << endl;
     }
+    cout << endl;
+}
+
+bool CheckAble() {
+    int cnt = 0;
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (board[i][j].first > 0) cnt++;
+        }
+    }
+    if (cnt < 2) return false;
+    return true;
 }
 
 // 공격자 선정
-void ChooseAttacker(){
+void ChooseAttacker() {
     int point = 1000000;
-    for(int i = 1; i <= n; i++){
-        for(int j = 1; j <= n; j++){
-            if(board[i][j].first == 0) continue; // 부서진 포탑은 쓰면 안됨
-            if(board[i][j].first < point){ // 공격력이 더 낮으면 갱신
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (board[i][j].first == 0) continue; // 부서진 포탑은 쓰면 안됨
+            if (board[i][j].first < point) { // 공격력이 더 낮으면 갱신
                 point = board[i][j].first;
-                weak_pos = {i, j};
+                weak_pos = { i, j };
             }
-            else if(board[i][j].first == point){ // 공격력 동일
-                if(board[i][j].second > board[weak_pos.first][weak_pos.second].second){ // 마지막 공격이 더 최신이면 갱신
-                    weak_pos = {i, j};
+            else if (board[i][j].first == point) { // 공격력 동일
+                if (board[i][j].second > board[weak_pos.first][weak_pos.second].second) { // 마지막 공격이 더 최신이면 갱신
+                    weak_pos = { i, j };
                 }
-                else if(board[i][j].second == board[weak_pos.first][weak_pos.second].second){ // 마지막 공격 시기 동일
-                    if(weak_pos.first+weak_pos.second < i + j){ // 행+열 값이 더 크면 갱신
-                        weak_pos = {i, j};
+                else if (board[i][j].second == board[weak_pos.first][weak_pos.second].second) { // 마지막 공격 시기 동일
+                    if (weak_pos.first + weak_pos.second < i + j) { // 행+열 값이 더 크면 갱신
+                        weak_pos = { i, j };
                     }
-                    else if(weak_pos.first+weak_pos.second == i + j){ // 행+열 값 동일
-                        if(weak_pos.second < j) weak_pos = {i, j}; // 열이 더 크면 갱신
+                    else if (weak_pos.first + weak_pos.second == i + j) { // 행+열 값 동일
+                        if (weak_pos.second < j) weak_pos = { i, j }; // 열이 더 크면 갱신
                     }
                 }
             }
         }
     }
-    board[weak_pos.first][weak_pos.second].first += n+m;
+    board[weak_pos.first][weak_pos.second].first += n + m;
     dmg = board[weak_pos.first][weak_pos.second].first;
 }
 
 // 피격자 선정
-void ChooseBeAttacker(){
+void ChooseBeAttacker() {
     int point = -1;
-    for(int i = 1; i <= n; i++){
-        for(int j = 1; j <= n; j++){
-            if(board[i][j].first == 0) continue; // 부서진 포탑은 쓰면 안됨
-            if(board[i][j].first > point){ // 공격력이 더 높으면 갱신
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (board[i][j].first == 0) continue; // 부서진 포탑은 쓰면 안됨
+            if (i == weak_pos.first && j == weak_pos.second) continue;
+            if (board[i][j].first > point) { // 공격력이 더 높으면 갱신
                 point = board[i][j].first;
-                strong_pos = {i, j};
+                strong_pos = { i, j };
             }
-            else if(board[i][j].first == point){ // 공격력 동일
-                if(board[i][j].second < board[strong_pos.first][strong_pos.second].second){ // 마지막 공격이 더 오래 됐으면 갱신
-                    strong_pos = {i, j};
+            else if (board[i][j].first == point) { // 공격력 동일
+                if (board[i][j].second < board[strong_pos.first][strong_pos.second].second) { // 마지막 공격이 더 오래 됐으면 갱신
+                    strong_pos = { i, j };
                 }
-                else if(board[i][j].second == board[strong_pos.first][strong_pos.second].second){ // 마지막 공격 시기 동일
-                    if(strong_pos.first+strong_pos.second > i + j){ // 행+열 값이 더 작으면 갱신
-                        strong_pos = {i, j};
+                else if (board[i][j].second == board[strong_pos.first][strong_pos.second].second) { // 마지막 공격 시기 동일
+                    if (strong_pos.first + strong_pos.second > i + j) { // 행+열 값이 더 작으면 갱신
+                        strong_pos = { i, j };
                     }
-                    else if(strong_pos.first+strong_pos.second == i + j){ // 행+열 값 동일
-                        if(strong_pos.second > j) strong_pos = {i, j}; // 열이 더 작으면 갱신
+                    else if (strong_pos.first + strong_pos.second == i + j) { // 행+열 값 동일
+                        if (strong_pos.second > j) strong_pos = { i, j }; // 열이 더 작으면 갱신
                     }
                 }
             }
@@ -92,43 +105,43 @@ void ChooseBeAttacker(){
 }
 
 // 레이저 공격 시도. 성공시 true 반환.
-bool laser(int round){
-    bool visited[n+1][n+1] = {{false}};
-    pair<int, int> load[n+1][n+1];
+bool laser(int round) {
+    bool visited[11][11] = { {false} };
+    pair<int, int> load[11][11];
 
     queue<pair<int, int>> q;
-    q.push({weak_pos.first, weak_pos.second});
+    q.push({ weak_pos.first, weak_pos.second });
     visited[weak_pos.first][weak_pos.second] = true;
-    
+
     bool found = false;
-    while(!q.empty() && !found){
+    while (!q.empty() && !found) {
         int q_size = q.size();
-        for(int x = 0; x < q_size; x++){
+        for (int x = 0; x < q_size; x++) {
             pair<int, int> pos = q.front();
             q.pop();
-            for(int i = 0; i < 4; i++){
+            for (int i = 0; i < 4; i++) {
                 int nx = pos.first + dx[i];
                 int ny = pos.second + dy[i];
-                if(nx < 1) nx = n;
-                else if(nx > n) nx = 1;
-                if(ny < 1) ny = n;
-                else if(ny > n) ny = 1;
-                if(board[nx][ny].first == 0 || visited[nx][ny]) continue; // 부서진 포탑은 못 지나감
-                load[nx][ny] = {pos.first, pos.second};
+                if (nx < 1) nx = n;
+                else if (nx > n) nx = 1;
+                if (ny < 1) ny = n;
+                else if (ny > n) ny = 1;
+                if (board[nx][ny].first == 0 || visited[nx][ny]) continue; // 부서진 포탑은 못 지나감
+                load[nx][ny] = { pos.first, pos.second };
                 visited[nx][ny] = true;
-                if(nx == strong_pos.first && ny == strong_pos.second){ // 피격자 찾음
+                if (nx == strong_pos.first && ny == strong_pos.second) { // 피격자 찾음
                     board[strong_pos.first][strong_pos.second].first -= dmg;
-                    if(board[strong_pos.first][strong_pos.second].first < 0) board[strong_pos.first][strong_pos.second].first = 0;
+                    if (board[strong_pos.first][strong_pos.second].first < 0) board[strong_pos.first][strong_pos.second].first = 0;
                     attacked[strong_pos.first][strong_pos.second] = true;
                     found = true;
                     break;
                 }
-                q.push({nx, ny});
+                q.push({ nx, ny });
             }
         }
     }
-    
-    if(!found) return false; // 레이저 공격 불가능
+
+    if (!found) return false; // 레이저 공격 불가능
 
     // cout << "==LOAD==" << endl;
     // for(int i = 1; i <= n; i++){
@@ -141,70 +154,73 @@ bool laser(int round){
     // load에 저장된 좌표를 보면서 weak_pos까지 따라가기 + 데미지
     int r = load[strong_pos.first][strong_pos.second].first;
     int c = load[strong_pos.first][strong_pos.second].second;
-    while(!(r == weak_pos.first && c == weak_pos.second)){
-        board[r][c].first -= (dmg/2);
+    while (!(r == weak_pos.first && c == weak_pos.second)) {
+        board[r][c].first -= (dmg / 2);
         attacked[r][c] = true;
-        if(board[r][c].first < 0) board[r][c].first = 0;
+        if (board[r][c].first < 0) board[r][c].first = 0;
         int nr = load[r][c].first;
         int nc = load[r][c].second;
         r = nr;
         c = nc;
     }
-return true;
+    return true;
 }
 
 // 포탄 공격
-void bomb(int round){
+void bomb(int round) {
     board[strong_pos.first][strong_pos.second].first -= dmg;
+    //cout << "BOMB CENTER: " << strong_pos.first << ' ' << strong_pos.second << endl;
     attacked[strong_pos.first][strong_pos.second] = true;
-    if(board[strong_pos.first][strong_pos.second].first < 0) board[strong_pos.first][strong_pos.second].first = 0;
-    for(int i = 0; i < 8; i++){
-        int nx = strong_pos.first + dx[i];
-        int ny = strong_pos.second + dy[i];
-        if(nx < 1) nx = n;
-        else if(nx > n) nx = 1;
-        if(ny < 1) ny = n;
-        else if(ny > n) ny = 1;
-        if(board[nx][ny].first == 0) continue; // 공격력 0이면 피격X
-        if(nx == weak_pos.first && ny == weak_pos.second) continue; // 공격자는 피격X
-        board[nx][ny].first -= (dmg/2);
+    if (board[strong_pos.first][strong_pos.second].first < 0) board[strong_pos.first][strong_pos.second].first = 0;
+    for (int i = 0; i < 8; i++) {
+        int nx = strong_pos.first + b_dx[i];
+        int ny = strong_pos.second + b_dy[i];
+        if (nx < 1) nx = n;
+        else if (nx > n) nx = 1;
+        if (ny < 1) ny = n;
+        else if (ny > n) ny = 1;
+        //cout << "BOMD: " << nx << ' ' << ny << endl;
+        if (board[nx][ny].first == 0) continue; // 공격력 0이면 피격X
+        if (nx == weak_pos.first && ny == weak_pos.second) continue; // 공격자는 피격X
+        board[nx][ny].first -= (dmg / 2);
         attacked[nx][ny] = true;
-        if(board[nx][ny].first < 0) board[nx][ny].first = 0;
+        if (board[nx][ny].first < 0) board[nx][ny].first = 0;
     }
 }
 
 // 공격
-void Attack(int round){
-    if(!laser(round)){
+void Attack(int round) {
+    if (!laser(round)) {
+        //cout << "BOMB!!!" << endl;
         bomb(round);
     }
     board[weak_pos.first][weak_pos.second].second = round;
 }
 
 // 회복 - 공.피격시 X, 체력0 X
-void Heal(){
-    for(int i = 1; i <= n; i++){
-        for(int j = 1; j <= n; j++){
-            if(board[i][j].first == 0 || attacked[i][j] || (i == weak_pos.first && j == weak_pos.second)) continue; // 공격력0, 공.피격자는 회복X
+void Heal() {
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (board[i][j].first == 0 || attacked[i][j] || (i == weak_pos.first && j == weak_pos.second)) continue; // 공격력0, 공.피격자는 회복X
             board[i][j].first++;
         }
     }
 }
 
-void TryAttack(int round){
+bool TryAttack(int round) {
+    if (!CheckAble()) return false;
     ChooseAttacker();
     ChooseBeAttacker();
-    //cout << "ATTACKER: " << weak_pos.first << ' ' << weak_pos.second << endl;
-    //cout << "BE ATTACKER: " << strong_pos.first << ' ' << strong_pos.second << endl;
     Attack(round);
     Heal();
+    return true;
 }
 
-void answer(){
+void answer() {
     int powerful = 0;
-    for(int i = 1; i <= n; i++){
-        for(int j = 1; j <= n; j++){
-            if(board[i][j].first > powerful){
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+            if (board[i][j].first > powerful) {
                 powerful = board[i][j].first;
             }
         }
@@ -214,8 +230,12 @@ void answer(){
 
 int main() {
     input();
-    for(int i = 1; i <= k; i++){
-        TryAttack(i);
+    //cout << "초기 모습" << endl;
+    //print_board();
+    for (int i = 1; i <= k; i++) {
+        //cout << i << " 번째" << endl;
+        if (!TryAttack(i)) break;
+        //print_board();
     }
     answer();
     return 0;
@@ -241,7 +261,7 @@ M+N만큼 공격력 상승
 - 공격력이 가장 높은 포탑 -> 공격한지 가장 오래된 포탑 -> 행+열이 가장 작은 포탑 -> 열이 가장 작은 포탑
 좌상단부터 배열 순회하면서 공격력 값을 비교해서 크면, 마지막 공격 시기 비교, 행+열 값 비교, 같으면 열 값 비교.
 
-선정이 완료되면 
+선정이 완료되면
 2-1. 레이저 공격 시도
     BFS로 탐색. 도달 가능여부 확인. 격자 연결된 것 주의.
     부서진 포탑은 못 지나감.
