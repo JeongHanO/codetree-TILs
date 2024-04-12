@@ -208,6 +208,11 @@ void Heal() {
             board[i][j].first++;
         }
     }
+    for (int i = 1; i <= n; i++) {
+        for (int j = 1; j <= n; j++) {
+            attacked[i][j] = false;
+        }
+    }
 }
 
 bool TryAttack(int round) {
