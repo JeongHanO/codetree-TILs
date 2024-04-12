@@ -28,7 +28,7 @@ void input() {
 void print_board() {
     cout << "==공격력==" << endl;
     for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= n; j++) {
+        for (int j = 1; j <= m; j++) {
             cout << board[i][j].first << ' ';
         }
         cout << endl;
@@ -39,7 +39,7 @@ void print_board() {
 bool CheckAble() {
     int cnt = 0;
     for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= n; j++) {
+        for (int j = 1; j <= m; j++) {
             if (board[i][j].first > 0) cnt++;
         }
     }
@@ -51,7 +51,7 @@ bool CheckAble() {
 void ChooseAttacker() {
     int point = 1000000;
     for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= n; j++) {
+        for (int j = 1; j <= m; j++) {
             if (board[i][j].first == 0) continue; // 부서진 포탑은 쓰면 안됨
             if (board[i][j].first < point) { // 공격력이 더 낮으면 갱신
                 point = board[i][j].first;
@@ -74,13 +74,14 @@ void ChooseAttacker() {
     }
     board[weak_pos.first][weak_pos.second].first += n + m;
     dmg = board[weak_pos.first][weak_pos.second].first;
+    //cout << "ATTACKER: " << weak_pos.first << ' ' << weak_pos.second << endl;
 }
 
 // 피격자 선정
 void ChooseBeAttacker() {
     int point = -1;
     for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= n; j++) {
+        for (int j = 1; j <= m; j++) {
             if (board[i][j].first == 0) continue; // 부서진 포탑은 쓰면 안됨
             if (i == weak_pos.first && j == weak_pos.second) continue;
             if (board[i][j].first > point) { // 공격력이 더 높으면 갱신
@@ -102,6 +103,8 @@ void ChooseBeAttacker() {
             }
         }
     }
+    //cout << "BE ATTACKER: " << strong_pos.first << ' ' << strong_pos.second << endl;
+
 }
 
 // 레이저 공격 시도. 성공시 true 반환.
@@ -124,8 +127,8 @@ bool laser(int round) {
                 int ny = pos.second + dy[i];
                 if (nx < 1) nx = n;
                 else if (nx > n) nx = 1;
-                if (ny < 1) ny = n;
-                else if (ny > n) ny = 1;
+                if (ny < 1) ny = m;
+                else if (ny > m) ny = 1;
                 if (board[nx][ny].first == 0 || visited[nx][ny]) continue; // 부서진 포탑은 못 지나감
                 load[nx][ny] = { pos.first, pos.second };
                 visited[nx][ny] = true;
@@ -177,8 +180,8 @@ void bomb(int round) {
         int ny = strong_pos.second + b_dy[i];
         if (nx < 1) nx = n;
         else if (nx > n) nx = 1;
-        if (ny < 1) ny = n;
-        else if (ny > n) ny = 1;
+        if (ny < 1) ny = m;
+        else if (ny > m) ny = 1;
         //cout << "BOMD: " << nx << ' ' << ny << endl;
         if (board[nx][ny].first == 0) continue; // 공격력 0이면 피격X
         if (nx == weak_pos.first && ny == weak_pos.second) continue; // 공격자는 피격X
@@ -200,7 +203,7 @@ void Attack(int round) {
 // 회복 - 공.피격시 X, 체력0 X
 void Heal() {
     for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= n; j++) {
+        for (int j = 1; j <= m; j++) {
             if (board[i][j].first == 0 || attacked[i][j] || (i == weak_pos.first && j == weak_pos.second)) continue; // 공격력0, 공.피격자는 회복X
             board[i][j].first++;
         }
@@ -219,7 +222,7 @@ bool TryAttack(int round) {
 void answer() {
     int powerful = 0;
     for (int i = 1; i <= n; i++) {
-        for (int j = 1; j <= n; j++) {
+        for (int j = 1; j <= m; j++) {
             if (board[i][j].first > powerful) {
                 powerful = board[i][j].first;
             }
@@ -230,8 +233,8 @@ void answer() {
 
 int main() {
     input();
-    //cout << "초기 모습" << endl;
-    //print_board();
+    /*cout << "초기 모습" << endl;
+    print_board();*/
     for (int i = 1; i <= k; i++) {
         //cout << i << " 번째" << endl;
         if (!TryAttack(i)) break;
