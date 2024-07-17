@@ -6,7 +6,7 @@ using namespace std;
 int main() {
     unordered_map<string, int> m;
     int n; cin >> n;
-    int ans = 0;
+    int ans = 1;
     for(int i = 0; i < n; i++){
         string s; cin >> s;
         if(m.find(s) == m.end()){
