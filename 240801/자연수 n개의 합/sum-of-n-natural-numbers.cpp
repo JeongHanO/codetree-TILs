@@ -8,7 +8,7 @@ int main() {
     int n =0;
     while(l <= r){
         long long mid = (l+r)/2;
-        if(mid*(mid+1)/2 < s){
+        if(mid*(mid+1)/2 <= s){
             n = mid;
             l = mid +1;
         }else r = mid -1;
