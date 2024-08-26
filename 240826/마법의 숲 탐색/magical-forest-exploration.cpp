@@ -108,7 +108,7 @@ void move_gol(int num) {
 		// 추가 이동 불가능
 		if (!flag){
 			// 범위 밖
-			if (depth < 1) { 
+			if (depth <= 1) { 
 				clearBoard();
 				return;
 			}
