@@ -102,6 +102,17 @@ void turnBoard() {
 						c = j;
 						degree = deg;
 					}
+					else if (degree == deg) {
+						if (c > j) {
+							r = i;
+							c = j;
+						}
+						else if (c == j) {
+							if (r > i) {
+								r = i;
+							}
+						}
+					}
 				}
 			}
 			// 회전 복원
@@ -110,12 +121,9 @@ void turnBoard() {
 					board[i+x-1][j+y-1] = tmp_board[x][y];
 				}
 			}
-
-			int asdf = 1;
 		}
 	}
 
-	int de = 1;
 	for (int i = 0; i <= degree; i++) {
 		turn(r, c);
 	}
@@ -172,8 +180,6 @@ void insertRelic() {
 			}
 		}
 	}
-
-	int de = 1;
 }
 
 void solve() {
