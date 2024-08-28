@@ -76,8 +76,8 @@ void turnBoard() {
 	int r, c, degree = -1, maxRelic = 0;
 	
 	// 유물을 최대로 획득 가능한 경우 탐색
-	for (int i = 1; i < 4; i++) {
-		for (int j = 1; j < 4; j++) {
+	for (int j = 1; j < 4; j++) {
+		for (int i = 1; i < 4; i++) {
 			int tmp_board[3][3];
 			// 회전 배열 저장
 			for (int x = 0; x <= 2 ; x++) {
