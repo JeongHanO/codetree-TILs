@@ -46,11 +46,12 @@ int cntRelic() {
 						q.push({ nx, ny });
 					}
 				}
-				cntMax = max(cntMax, cnt);
+				if (cnt >= 3) {
+					cntMax += cnt;
+				}
 			}
 		}
 	}
-	if (cntMax < 3) return 0;
 	return cntMax;
 }
 
@@ -102,19 +103,11 @@ void turnBoard() {
 						c = j;
 						degree = deg;
 					}
-					else if (degree == deg) {
-						if (c > j) {
-							r = i;
-							c = j;
-						}
-						else if (c == j) {
-							if (r > i) {
-								r = i;
-							}
-						}
-					}
 				}
 			}
+
+			int d = 1;
+
 			// 회전 복원
 			for (int x = 0; x <= 2; x++) {
 				for (int y = 0; y <= 2; y++) {
@@ -186,7 +179,7 @@ void solve() {
 	for (int i = 0; i < K; i++) {
 		int sum = 0;
 		turnBoard();
-		int num = getRelic();
+		int num = max(num, getRelic());
 		if (num == 0) return; // 수확할 수 있는 방법 없음
 		while (num != 0) { // 연쇄 획득 끝날 때까지
 			sum += num;
