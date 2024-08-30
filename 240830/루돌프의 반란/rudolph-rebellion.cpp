@@ -1,224 +1,186 @@
 #include <iostream>
+#include <vector>
+#include <string.h>
+#include <algorithm>
 using namespace std;
 
-int N, M, P, C, D, survivedSanta;
-pair<int, int> Rpos; // 루돌프 위치
-pair<int, int> Spos[31]; // 산타 위치
-int status[30]; // -1: 탈락, 1~m: n턴에 기절
-int score[30]; // 산타 별 획득 점수
-int board[51][51]; // 0: 빈칸, 1~P: 산타, -1: 루돌프
+int n, m, p, santapower, roopower;
 
-int rdx[] = { 1, 1, 1, 0, 0, -1, -1, -1 };
-int rdy[] = { 1, 0, -1, 1, -1, 1, 0, -1 };
+int rooi, rooj;
 
-// 상우하좌
-int sdx[] = { -1, 0, 1, 0 };
-int sdy[] = { 0, 1, 0, -1 };
+bool santaongame[30];
 
-int calcDist(pair<int, int> santa, pair<int, int> ru) { // 산타 - 루돌프 거리
-	return ((ru.first - santa.first) * (ru.first - santa.first) +
-		(ru.second - santa.second) * (ru.second - santa.second));
+int arr[50][50];
+
+int santadx[4] = { 0,1,0,-1 };
+int santady[4] = { -1,0,1,0 };
+
+int roodx[8] = { 0,1,0,-1,1,1,-1,-1 };
+int roody[8] = { -1,0,1,0,1,-1,1,-1 };
+
+int santascore[30] = { 0, };
+int santaloci[30];
+int santalocj[30];
+int santastan[30];
+
+int caldist(int i, int j, int ii, int jj) {
+	return (i - ii)*(i - ii) + (j - jj)*(j - jj);
 }
 
-void input() {
-	cin >> N >> M >> P >> C >> D;
-	
-	survivedSanta = P;
-	int x, y;
-	cin >> x >> y;
-	Rpos = { x, y };
-	board[x][y] = -1;
-
-	int n, a, b;
-	for (int i = 1; i <= P; i++) {
-		cin >> n >> a >> b;
-		Spos[n] = { a, b };
-		board[a][b] = n;
-		status[i] = -10000;
+void santadfs(int i, int j, int dir, int befindex) {
+	if (i >= n || j >= n || i < 0 || j < 0) {
+		santaongame[befindex] = false;
+		return;
 	}
-}
-
-// 범위 밖이면 false, 범위 안이면 true.
-bool checkRange(pair<int,int> pos) {
-	if (pos.first < 1 || pos.second < 1 || pos.first > N || pos.second > N) return false;
-	return true;
-}
-
-// pos에서 dir 방향으로 연쇄 반응
-void chained(pair<int, int> pos, pair<int, int> dir, int santaNum) {
-	if (board[pos.first][pos.second] > 0) { // 이동한 자리에 산타 있음 -> 연쇄 작용
-		// 1. 새롭게 밀릴 산타(기존에 있던 산타) 정보 저장
-		int nSantaNum = board[pos.first][pos.second]; // 연쇄로 밀릴 산타 번호
-		pair<int, int> npos = { pos.first + dir.first, pos.second + dir.second }; // 연쇄로 밀릴 산타가 갈 곳
-		
-		// 2. 밀려온 산타 정보 갱신
-		board[pos.first][pos.second] = santaNum;
-		Spos[santaNum] = pos;
-
-		if (!checkRange(npos)) { // 새롭게 밀릴 산타가 밖으로 나감 -> 연쇄작용 끝
-			status[nSantaNum] = -1; // 탈락
-			survivedSanta--;
+	if (arr[i][j] != -1) {
+		int nx = j + roodx[dir];
+		int ny = i + roody[dir];
+		santaloci[befindex] = ny;
+		santalocj[befindex] = nx;
+		if (nx >= n || ny >= n || nx < 0 || ny < 0) {
+			santaongame[arr[i][j]] = false;
+			arr[i][j] = befindex;
 			return;
 		}
-		
-		// 3. 새롭게 밀릴 산타 정보로 재귀
-		chained(npos, dir, nSantaNum);
+		santadfs(ny, nx, dir, arr[i][j]);
+		arr[i][j] = befindex;
 	}
-	else { // 빈 칸임 -> 연쇄작용 끝
-		board[pos.first][pos.second] = santaNum;
-		Spos[santaNum] = pos;
+	else {
+		santaloci[befindex] = i;
+		santalocj[befindex] = j;
+		arr[i][j] = befindex;
 		return;
-	}
-}
-
-// santaNum에 해당하는 산타가 dir방향으로 C or D만큼 날라감
-void crash(int santaNum, pair<int, int> dir, bool isRu) {
-	pair<int, int> fliedPos;
-	if (isRu) { // 루돌프 -> 산타
-		// C만큼 dir로 날라가기
-		fliedPos = { Spos[santaNum].first + (dir.first*C), Spos[santaNum].second + (dir.second*C) };
-		}
-	else { // 산타 -> 루돌프
-		// D만큼 dir로 날라가기
-		fliedPos = { Rpos.first + (dir.first*D), Rpos.second + (dir.second*D) };
-	}
-
-	// 날아간 곳이 게임판 밖
-	if (fliedPos.first < 1 || fliedPos.second < 1 || fliedPos.first > N || fliedPos.second > N) {
-		status[santaNum] = -1; // 탈락
-		survivedSanta--;
-		return;
-	}
-
-	// "날아간 칸"에서 산타 연쇄 반응 확인
-	chained(fliedPos, dir, santaNum);
-}
-
-// 루돌프 이동
-void moveR(int t) {
-	pair<int, int> target = { -1, -1 };
-	int dist = 1e8;
-
-	// 목표 산타 설정
-	for (int i = 1; i <= P; i++) {
-		if (status[i] == -1) continue; // 탈락한 산타는 표적 X
-		int tmp_dist = calcDist(Spos[i], Rpos);
-		if (tmp_dist < dist) { // 가장 가까운 산타 우선
-			dist = tmp_dist;
-			target = Spos[i];
-		}
-		else if (tmp_dist == dist) { // 거리가 동일한 산타
-			if (target.first < Spos[i].first) { // r이 큰 산타
-				target = Spos[i];
-			}
-			else if (target.first == Spos[i].first) {
-				if (target.second < Spos[i].second) { // c가 큰 산타
-					target = Spos[i];
-				}
-			}
-		}
-	}
-
-	// 이동(산타와 가까워지는 방향 -> 8방향에 대해 가까워 지는 방향 탐색)
-	dist = 1e8;
-	int dir = 0;
-	pair<int, int> closestPos;
-	for (int i = 0; i < 8; i++) {
-		pair<int, int> tmpPos = { Rpos.first + rdx[i], Rpos.second + rdy[i] };
-		int tmp_dist = calcDist(target, tmpPos);
-		if (dist > tmp_dist) {
-			dist = tmp_dist;
-			closestPos = tmpPos;
-			dir = i;
-		}
-	}
-
-	// 충돌 확인 & 충돌(점수 획득). 위치 이동 board에 기록할 것
-	if (board[closestPos.first][closestPos.second] > 0) { // 이동한 자리에 산타가 있음(충돌)
-		int santaNum = board[closestPos.first][closestPos.second];
-		score[santaNum] += C; // 점수 계산
-		status[santaNum] = t; // 산타 기절 기록
-		crash(santaNum, {rdx[dir], rdy[dir]}, true); // 충돌 & 연쇄 반응
-	}
-
-	// 루돌프 이동
-	board[Rpos.first][Rpos.second] = 0;
-	board[closestPos.first][closestPos.second] = -1;
-	Rpos = closestPos;
-}
-
-// 산타 이동
-void moveS(int t) {
-	for (int sanNum = 1; sanNum <= P; sanNum++) {
-		if (status[sanNum] == -1) continue; // 탈락
-		if (status[sanNum]+1 >= t) continue; // 기절 (기절한 턴+1이 현재 턴보다 크거나 같음)
-		
-		// 루돌프와 가까워 지는 방향 있는지 확인 & 이동(board랑 sPos 갱신)
-		pair<int, int> nPos = { -1, -1 };
-		int dir = 0;
-		int nowDist = calcDist(Spos[sanNum], Rpos); // 현재 위치에서 루돌프와의 거리
-		for (int i = 0; i < 4; i++) {
-			pair<int, int> tmpPos = { Spos[sanNum].first + sdx[i], Spos[sanNum].second + sdy[i] };
-			if (!checkRange(tmpPos)) continue; // 범위 밖으로 이동 X
-			if (board[tmpPos.first][tmpPos.second] > 0) continue; // 이미 산타가 있는 칸이면 이동 X
-			int tmpDist = calcDist(tmpPos, Rpos);
-			if (nowDist > tmpDist) { // 탐색한 칸이 가까운 칸
-				nowDist = tmpDist;
-				nPos = tmpPos;
-				dir = i;
-			}
-		}
-
-		if (nPos.first != -1 && nPos.second != -1) { // 가까워지는 자리로 이동 가능
-			board[Spos[sanNum].first][Spos[sanNum].second] = 0;
-			// 충돌 확인 & 충돌(점수 획득)
-			if (board[nPos.first][nPos.second] == -1) { // 이동한 칸에 루돌프 있음
-				score[sanNum] += D;
-				status[sanNum] = t; // 산타 기절 기록
-				crash(sanNum, {-sdx[dir], -sdy[dir]}, false);
-			}
-			else {
-				board[nPos.first][nPos.second] = sanNum;
-				Spos[sanNum] = nPos;
-			}
-		}
-	}
-}
-
-void increaseScore() {
-	for (int i = 1; i <= P; i++) {
-		if (status[i] != -1) { // 탈락한 산타 빼고(생존한 산타)
-			score[i]++; // 1점 증가
-		}
-	}
-}
-
-void print() {
-	for (int i = 1; i <= P; i++) {
-		cout << score[i] << ' ';
-	}
-}
-
-void printB() {
-	for (int i = 1; i <= N; i++) {
-		for (int j = 1; j <= N; j++) {
-			cout << board[i][j] << ' ';
-		}
-		cout << endl;
-	}
-}
-
-void solve() {
-	for(int i = 1; i <= M; i++) {
-		if (survivedSanta == 0) break; // 남은 산타가 없으면 종료
-		moveR(i);
-		moveS(i);
-		increaseScore();
 	}
 }
 
 int main() {
-	input();
-	solve();
-	print();
+	cin >> n >> m >> p >> roopower >> santapower;
+
+	cin >> rooi >> rooj;
+	rooi--;
+	rooj--;
+	for (int i = 0; i < n; i++) {
+		fill(arr[i], arr[i] + n, -1);
+	}
+	for (int temp = 0; temp < p; temp++) {
+		int i, j, num;
+		cin >> num >> i >> j;
+		santaloci[num - 1] = i - 1;
+		santalocj[num - 1] = j - 1;
+		santascore[num - 1] = 0;
+		arr[i - 1][j - 1] = num - 1;
+		santaongame[num - 1] = true;
+	}
+	for (int round = 1; round <= m; round++) {
+
+		int mindist = 1000000000;
+		int santaindex = -1;
+		//루돌프가 달려갈 산타 선택
+		for (int i = n - 1; i >= 0; --i) {
+			for (int j = n - 1; j >= 0; --j) {
+				if (arr[i][j] != -1) {
+					int temp = caldist(i, j, rooi, rooj);
+					if (mindist > temp) {
+						mindist = temp;
+						santaindex = arr[i][j];
+					}
+				}
+			}
+		}
+
+		// 선택된 산타로 가는 방향 선택
+		mindist = 1000000000;
+		int dirindex = -1;
+		for (int dir = 0; dir < 8; dir++) {
+			int nx = rooj + roodx[dir];
+			int ny = rooi + roody[dir];
+			if (nx >= n || ny >= n || nx < 0 || ny < 0) continue;
+			int temp = caldist(ny, nx, santaloci[santaindex], santalocj[santaindex]);
+			if (temp < mindist) {
+				mindist = temp;
+				dirindex = dir;
+			}
+		}
+
+		//루돌프 이동
+		rooj = rooj + roodx[dirindex];
+		rooi = rooi + roody[dirindex];
+		//루돌프가 이동한 곳에 산타가 있다면?
+		if (arr[rooi][rooj] != -1) {
+			santascore[arr[rooi][rooj]] += roopower;
+			santalocj[arr[rooi][rooj]] += roopower * roodx[dirindex];
+			santaloci[arr[rooi][rooj]] += roopower * roody[dirindex];
+			santastan[arr[rooi][rooj]] = round + 1;
+			//튕겨나간 산타 탈락
+			if (santalocj[arr[rooi][rooj]] >= n || santaloci[arr[rooi][rooj]] >= n || santaloci[arr[rooi][rooj]] < 0 || santalocj[arr[rooi][rooj]] < 0) {
+				santaongame[arr[rooi][rooj]] = false;
+			}
+			else {
+				//연쇄 반응
+				santadfs(santaloci[arr[rooi][rooj]], santalocj[arr[rooi][rooj]], dirindex, arr[rooi][rooj]);
+			}
+			arr[rooi][rooj] = -1;
+		}
+		
+		////산타이동
+		mindist = 1000000000;
+		for (int temp = 0; temp < p; temp++) {
+			if (santastan[temp] >= round || santaongame[temp] == false) continue; // 기절 or 탈락
+			dirindex = -1;
+			mindist = caldist(santaloci[temp], santalocj[temp], rooi, rooj); // 현재 거리
+			for (int dir = 0; dir < 4; dir++) {
+				int ny = santaloci[temp] + santady[dir];
+				int nx = santalocj[temp] + santadx[dir];
+				if (nx >= n || ny >= n || nx < 0 || ny < 0) continue; //배열 넘어감
+				if (arr[ny][nx] != -1) continue; //해당 칸에 산타가 있음
+				int tempdist = caldist(ny, nx, rooi, rooj);
+				if (tempdist < mindist) {
+					mindist = tempdist;
+					dirindex = dir;
+				}
+			}
+
+			if (dirindex == -1) continue; // 움직일 수 없음
+			
+			int ny = santaloci[temp] + santady[dirindex];
+			int nx = santalocj[temp] + santadx[dirindex];
+
+			if (ny == rooi && nx == rooj) { // 산타가 루돌프 있는 칸으로 감
+				// 방향 전환
+				int de = 1;
+				if (dirindex < 2) {
+					dirindex += 2;
+				}
+				else {
+					dirindex -= 2;
+				}
+				
+				// 튕겨나갈 칸
+				ny += santapower * santady[dirindex];
+				nx += santapower * santadx[dirindex];
+
+				santascore[temp] += santapower;
+				arr[santaloci[temp]][santalocj[temp]] = -1;
+				santastan[temp] = round + 1;
+				santadfs(ny, nx, dirindex, temp);
+				santaloci[temp] = ny;
+				santalocj[temp] = nx;
+			}
+			else { // 빈 칸
+				arr[ny][nx] = temp;
+				arr[santaloci[temp]][santalocj[temp]] = -1;
+				santaloci[temp] = ny;
+				santalocj[temp] = nx;
+			}
+			
+		}
+
+		for (int temp = 0; temp < p; temp++) {
+			if (santaongame[temp] == true) santascore[temp]++;
+		}
+		
+	}
+	for (int temp = 0; temp < p; temp++) {
+		cout << santascore[temp] << " ";
+	}
 }
