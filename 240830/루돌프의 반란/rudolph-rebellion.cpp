@@ -3,7 +3,7 @@ using namespace std;
 
 int N, M, P, C, D, survivedSanta;
 pair<int, int> Rpos; // 루돌프 위치
-pair<int, int> Spos[30]; // 산타 위치
+pair<int, int> Spos[31]; // 산타 위치
 int status[30]; // -1: 탈락, 1~m: n턴에 기절
 int score[30]; // 산타 별 획득 점수
 int board[51][51]; // 0: 빈칸, 1~P: 산타, -1: 루돌프
@@ -29,11 +29,11 @@ void input() {
 	Rpos = { x, y };
 	board[x][y] = -1;
 
-	int n;
+	int n, a, b;
 	for (int i = 1; i <= P; i++) {
-		cin >> n >> x >> y;
-		Spos[n] = { x, y };
-		board[x][y] = n;
+		cin >> n >> a >> b;
+		Spos[n] = { a, b };
+		board[a][b] = n;
 		status[i] = -10000;
 	}
 }
